@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **Archived on 2026-10-02.** This repository is read-only. skillsmith now lives in [ong6/skills](https://github.com/ong6/skills) as the [`skillsmith`](https://github.com/ong6/skills/tree/main/skills/skillsmith) skill. The write-up stays at [junxiong.dev/skillsmith](https://junxiong.dev/skillsmith). The README below is kept as history.
+
 # skillsmith
 
 [![CI](https://github.com/ong6/skillsmith/actions/workflows/ci.yml/badge.svg)](https://github.com/ong6/skillsmith/actions/workflows/ci.yml)
