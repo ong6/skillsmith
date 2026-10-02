@@ -92,6 +92,88 @@ class LintTests(unittest.TestCase):
         self.assertIn("explicit-only", joined)
 
 
+class ReferenceLayoutTests(unittest.TestCase):
+    DESCRIPTION = "name: demo\ndescription: Use for x; not y."
+
+    def lint_with(self, body, files):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = write_skill(Path(directory), "demo", self.DESCRIPTION, body)
+            for relative, text in files.items():
+                path = folder / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+            return lint.lint(folder)
+
+    def test_long_reference_needs_a_contents_list(self):
+        long_text = "# Guide\n" + "line\n" * 120
+        _, warnings = self.lint_with("See [guide](references/guide.md).\n",
+                                     {"references/guide.md": long_text})
+        self.assertIn("no contents list", "\n".join(warnings))
+
+        contents = "# Guide\n\n## Contents\n- Setup\n- Usage\n\n" + "line\n" * 120
+        self.assertEqual(([], []), self.lint_with("See [guide](references/guide.md).\n",
+                                                  {"references/guide.md": contents}))
+        anchors = "# Guide\n\n- [Setup](#setup)\n- [Usage](#usage)\n- [Errors](#errors)\n" + "line\n" * 120
+        self.assertEqual(([], []), self.lint_with("See [guide](references/guide.md).\n",
+                                                  {"references/guide.md": anchors}))
+
+    def test_short_reference_needs_no_contents_list(self):
+        self.assertEqual(([], []), self.lint_with("See [guide](references/guide.md).\n",
+                                                  {"references/guide.md": "# Guide\n" + "line\n" * 90}))
+
+    def test_reference_reached_only_through_another_reference_warns(self):
+        _, warnings = self.lint_with(
+            "See [advanced](references/advanced.md).\n",
+            {"references/advanced.md": "Details in [details](details.md).\n",
+             "references/details.md": "# Details\n"},
+        )
+        self.assertIn("references/details.md is reachable only through references/advanced.md",
+                      "\n".join(warnings))
+
+    def test_prose_path_counts_as_a_reference(self):
+        self.assertEqual(([], []), self.lint_with(
+            "Schemas are documented in references/contract.md.\n",
+            {"references/contract.md": "# Contract\n"},
+        ))
+
+    def test_orphan_reference_warns_but_folder_docs_do_not(self):
+        _, warnings = self.lint_with("# Skill\n", {"references/orphan.md": "# Orphan\n",
+                                                   "README.md": "# About\n", "tests/fixture.md": "x\n"})
+        self.assertEqual(["references/orphan.md is never referenced from SKILL.md"], warnings)
+
+
+class DependencyTests(unittest.TestCase):
+    DESCRIPTION = "name: demo\ndescription: Use for x; not y."
+
+    def lint_with(self, body, script):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = write_skill(Path(directory), "demo", self.DESCRIPTION, body)
+            (folder / "scripts").mkdir()
+            (folder / "scripts" / "run.py").write_text(script, encoding="utf-8")
+            (folder / "scripts" / "helper.py").write_text("VALUE = 1\n", encoding="utf-8")
+            return lint.lint(folder)
+
+    def test_third_party_import_needs_an_install_line(self):
+        script = "import json\nimport httpx\nfrom helper import VALUE\nimport bpy\n"
+        _, warnings = self.lint_with("Run `python3 scripts/run.py`.\n", script)
+        self.assertEqual(["scripts/run.py imports httpx; give the install line next to the script"],
+                         warnings)
+        self.assertEqual(([], []), self.lint_with(
+            "Run `pip install httpx`, then `python3 scripts/run.py`.\n", script))
+
+    def test_stdlib_only_script_needs_nothing(self):
+        self.assertEqual(([], []), self.lint_with("Run `python3 scripts/run.py`.\n",
+                                                  "import json\nfrom helper import VALUE\n"))
+
+    def test_inline_dependency_script_must_run_through_uv(self):
+        script = '# /// script\n# dependencies = ["httpx"]\n# ///\nimport httpx\n'
+        _, warnings = self.lint_with("Run `python3 scripts/run.py <url>`.\n", script)
+        self.assertIn("invoke it with `uv run`", "\n".join(warnings))
+        self.assertEqual(([], []), self.lint_with("Run `uv run scripts/run.py <url>`.\n", script))
+        self.assertEqual(([], []), self.lint_with(
+            "Run `scripts/run.py <url>`. Do not run `python3 scripts/run.py`.\n", script))
+
+
 class InventoryTests(unittest.TestCase):
     def test_collects_repo_skills_once_and_ranks_overlap(self):
         with tempfile.TemporaryDirectory() as directory:

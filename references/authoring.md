@@ -1,7 +1,7 @@
 # Authoring a skill
 
 The make half of Skillsmith: gate, ground, draft. Deeper references:
-[Anthropic's skill-authoring best practices](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills/best-practices)
+[Anthropic's skill-authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
 and [OpenAI's Codex skill guide](https://developers.openai.com/codex/skills/).
 
 ## Gate: does this need a skill?
@@ -50,16 +50,23 @@ fire as noise. Steering skills that must apply whenever the situation arises sta
 metadata and invocation policy go in `agents/openai.yaml`, never frontmatter; for explicit-only
 skills set `policy.allow_implicit_invocation: false` and say explicit-only in the description.
 
-**Body.** Under 500 lines; split into sibling files past that, each one level deep from SKILL.md.
-Assume the agent is competent: add only what it doesn't know, and cut any paragraph that doesn't
-change behavior.
+**Body.** Under 500 lines, read as the contents page. Past that, split into sibling files that
+SKILL.md links directly: a file reached only through another reference may get a `head -100`
+preview, not a full read. Split by domain (`finance.md`, `sales.md`) so a task loads only its
+file, and open any reference over 100 lines with a contents list. Assume the agent is competent:
+add only what it doesn't know, and cut any paragraph that doesn't change behavior.
 
-- **Match specificity to fragility.** Fragile, order-dependent or destructive work gets exact
-  commands; judgment work gets direction and latitude.
+- **Match specificity to fragility, step by step.** Ask what breaks if the agent does a step
+  differently. Judgment steps get direction and latitude; fragile, order-dependent or destructive
+  steps (money, deletion, migrations) get an exact script, not more prose. One skill can mix both.
 - **Prefer scripts for deterministic steps.** Say whether to run or read each one. Scripts handle
-  their own errors and name every missing dependency at once.
+  their own errors and name every missing dependency at once. Never assume a package is installed:
+  put the install line, or a self-installing runner such as `uv run`, next to each script.
 - **Build in a feedback loop** for anything quality-critical: check, fix, repeat, and say which
-  step to return to on failure. Verification the agent can skip will get skipped.
+  step to return to on failure. Verification the agent can skip will get skipped. When step order
+  matters, give a short checklist the agent copies into its reply and ticks off, with the return
+  step written in; leave it out when order doesn't matter. When a check fails for a reason the rule
+  file doesn't cover yet, end by proposing the new rule for the owner to approve.
 - **Show bad, then good.** A failure mode not demonstrated will survive. A two-column table of bad
   and required behavior beats a paragraph of principle.
 - **The prose is itself a prompt.** Tics in the file leak into everything generated while it is
@@ -83,5 +90,7 @@ Whenever a skill is edited, check it for:
 - **Focus**: sections nobody uses, or that restate what the agent does anyway.
 - **Staleness**: hardcoded dates, prices, versions, dead links, retired skill names.
 - **Size**: grown past a checklist, so split or cut.
+- **Model drift**: wording written for an older or weaker model can make a stronger one worse.
+  When the default model changes, rerun the gate and cut what it no longer needs.
 
 A material behavior change goes back through the prove half before it stays active.

@@ -30,7 +30,8 @@ Make the skill from what the repository actually needs, then prove it before dec
    out of permanent discovery until Prove keeps it.
 
 Authoring rules, the gate table, and maintenance checks are in
-[references/authoring.md](references/authoring.md).
+[references/authoring.md](references/authoring.md). The sources behind the evaluation contract are
+in [references/research.md](references/research.md).
 
 ## Prove
 
@@ -38,6 +39,10 @@ Authoring rules, the gate table, and maintenance checks are in
 
 - Freeze the task, model, tools, context, rubric, critical failures, and keep threshold before
   seeing treatment output.
+- Evaluate on every model that will run the skill. When it will run on more than one (a smaller
+  model for subagents or chores, say), run the gate once per model and keep it only if each passes.
+  A step the weaker model misses needs clearer wording or a script; a skill the strongest model does
+  worse with needs cutting.
 - Split cases into development and heldout sets. Development cases guide iteration. Only heldout
   cases decide keep or retire. After any candidate iteration informed by a heldout result, discard
   those heldouts and write fresh unseen ones before the next gate.
@@ -155,7 +160,9 @@ All helpers use only the Python standard library and never call a model.
     python3 scripts/lint_skill.py /absolute/repo/.claude/skills/new-skill
 
 The inventory ranks existing skills by overlap with the proposed job; the linter blocks on
-frontmatter, size, and broken-link errors and warns on weak triggers.
+frontmatter, size, and broken-link errors. It warns on weak triggers, long references without a
+contents list, references SKILL.md does not link directly, and script dependencies with no install
+line.
 
 Evaluation version 3 is the default for new evaluations. Versions 1 and 2 remain accepted for existing bundles.
 

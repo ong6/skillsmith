@@ -3,6 +3,16 @@
 Use version 3 for new evaluations. The helper still accepts version 1 and 2 bundles so retained
 historical evidence remains reproducible; only v3 produces current admissible evidence.
 
+## Contents
+
+- [Version 3 additions](#version-3-additions): condition manifest, execution policy, native receipts
+- [Shared version 2/3 evaluation input](#shared-version-23-evaluation-input): cases, trials, rubric, triggers
+- [Packet distribution](#packet-distribution)
+- [Version 2 judge instruction](#version-2-judge-instruction)
+- [Version 2 combined judge output](#version-2-combined-judge-output)
+- [Version 1 compatibility](#version-1-compatibility)
+- [Machine-checked revision-loop evidence](#machine-checked-revision-loop-evidence)
+
 ## Version 3 additions
 
 Version 3 uses the version 2 case, trial, rubric, trigger, and judgment shapes plus four enforced

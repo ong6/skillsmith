@@ -40,7 +40,7 @@ would be expensive, context-poor, and hard to isolate.
 | Script | Does |
 |---|---|
 | `scripts/inventory.py` | Lists the repo's agent manuals and skills (plus user-level and plugin skills with `--global`), ranked by overlap with the proposed job |
-| `scripts/lint_skill.py` | Blocks on frontmatter, name, size and broken-link errors; warns on weak triggers and explicit-only mismatches |
+| `scripts/lint_skill.py` | Blocks on frontmatter, name, size and broken-link errors; warns on weak triggers, explicit-only mismatches, long references without a contents list, references not linked from SKILL.md, and script dependencies with no install line |
 | `scripts/eval_gate.py` | Prepares counterbalanced blind judge packets, then gates on heldout cases only |
 | `scripts/lifecycle_gate.py` | Validates the bounded revision history and the keep, restore or archive action |
 | `scripts/check_payload.py` | Detects drift between this checkout and an installation |
